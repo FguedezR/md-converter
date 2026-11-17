@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-accent="amber">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="robots" content="noindex">
+  <title>MD Converter · test bench</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wide">
+    <header>
+      <div class="topbar">
+        <p class="eyebrow">Test bench · reads _test/manifest.json</p>
+        <nav class="links" aria-label="Links"><a href="./">App<span aria-hidden="true"> ↗</span></a></nav>
+      </div>
+      <h1>Tests</h1>
+    </header>
+    <section class="controls first" aria-label="Actions">
+      <div class="actions">
+        <button id="run" class="primary" type="button">Run all</button>
+      </div>
+    </section>
+    <p id="summary" class="status" role="status" aria-live="polite">Press “Run all”. Serve the repo with python3 -m http.server.</p>
+    <div class="table-wrap">
+      <table id="results" hidden>
+        <thead><tr><th>Case</th><th>Format</th><th class="num">Time</th><th>Result</th><th class="num"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="detect.js"></script>
+  <script src="postprocess.js"></script>
+  <script src="convert.js"></script>
+  <script src="test.js"></script>
+</body>
+</html>
