@@ -60,11 +60,13 @@ const baseName = (name) => String(name).replace(/^.*[\\/]/, "").replace(/\.[^.]+
 const outputName = (name) => `${baseName(name) || "document"}.md`;
 
 // Escapa texto plano (PDF, presentaciones) para que no se interprete como Markdown.
-function escapeMarkdown(text) {
-  return String(text)
-    .replace(/[\\`*_[\]<>|]/g, "\\$&")
-    .replace(/^(\s*)(#{1,6}\s|[-+=]\s|>|~~~|(\d+)([.)])\s)/, (m, sp, mark, _, digits, dot) =>
-      digits ? `${sp}${digits}\\${dot} ` : `${sp}\\${mark}`);
+// lineStart = false cuando el texto va detrás de otro marcador (p. ej. «# »): ahí «1. » o «- »
+// ya no abren una lista y escaparlos solo ensuciaría el resultado.
+function escapeMarkdown(text, lineStart = true) {
+  const escaped = String(text).replace(/[\\`*_[\]<>|]/g, "\\$&");
+  if (!lineStart) return escaped;
+  return escaped.replace(/^(\s*)(#{1,6}\s|[-+=]\s|>|~~~|(\d+)([.)])\s)/, (m, sp, mark, digits, dot) =>
+    digits ? `${sp}${digits}\\${dot} ` : `${sp}\\${mark}`);
 }
 
 // Tabla GFM a partir de filas de celdas ya convertidas a Markdown en línea; la primera fila es la cabecera.

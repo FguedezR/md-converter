@@ -144,6 +144,8 @@ tr.active td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .reader[hidden] { display: none; }
 .reader[data-view="split"] { --w: min(1200px, 100vw - 32px); width: var(--w); margin-left: calc(50% - var(--w) / 2); }
 .reader-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+/* Barra e índice quedan fijos al desplazar la página; reader.js mide sus alturas (cambian en móvil). */
+.reader-bar { position: sticky; top: 0; z-index: 3; background: var(--surface); }
 .tabs { display: flex; }
 .tabs button { padding: 6px 12px; background: transparent; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 0; cursor: pointer; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
 .tabs button + button { border-left: 0; }
@@ -156,12 +158,12 @@ tr.active td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .reader-status { margin: 0; padding: 0 16px; color: var(--muted); font-size: 11px; }
 .reader-status:not(:empty) { padding-top: 8px; }
 
-.toc { margin: 0; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.toc { margin: 0; padding: 10px 16px; border-bottom: 1px solid var(--line); position: sticky; top: var(--reader-bar-h, 0px); z-index: 2; background: var(--surface); }
 .toc[hidden] { display: none; }
 .toc summary { cursor: pointer; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
 .toc summary:hover, .toc summary:focus-visible { color: var(--accent); outline: none; }
 .toc-count { color: var(--accent); margin-left: 6px; }
-.toc ol { margin: 10px 0 4px; padding: 0; list-style: none; columns: 2 240px; column-gap: 32px; }
+.toc ol { margin: 10px 0 4px; padding: 0; list-style: none; columns: 2 240px; column-gap: 32px; max-height: min(40vh, 320px); overflow: auto; }
 .toc li { break-inside: avoid; padding: 2px 0; }
 .toc .toc-2 { padding-left: 14px; }
 .toc .toc-3 { padding-left: 28px; color: var(--muted); }
@@ -172,7 +174,8 @@ tr.active td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .reader[data-view="preview"] .md-source, .reader[data-view="source"] .md-preview { display: none; }
 .reader[data-view="split"] .reader-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .reader[data-view="split"] .md-source { border-right: 1px solid var(--line); }
-.reader[data-view="split"] .md-source, .reader[data-view="split"] .md-preview { max-height: 75vh; overflow: auto; }
+/* Los paneles de Split ocupan lo que queda de ventana bajo la barra y el índice fijos. */
+.reader[data-view="split"] .md-source, .reader[data-view="split"] .md-preview { max-height: max(240px, calc(100vh - var(--reader-sticky-h, 0px) - 24px)); overflow: auto; }
 
 .md-source { margin: 0; padding: 20px 16px; overflow: auto; font: 400 12px/1.65 var(--mono); color: var(--fg); white-space: pre-wrap; overflow-wrap: anywhere; }
 .md-source:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
@@ -181,9 +184,10 @@ tr.active td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .md-preview { padding: 24px 16px 32px; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
 .md-preview > * { max-width: 72ch; }
 .md-preview > :first-child { margin-top: 0; }
-.md-preview h1, .md-preview h2, .md-preview h3, .md-preview h4, .md-preview h5, .md-preview h6 { margin: 1.8em 0 .6em; line-height: 1.25; font-weight: 600; scroll-margin-top: 16px; }
-.md-preview h1 { font: 400 28px/1.1 var(--pixel); }
-.md-preview h2 { font: 400 20px/1.2 var(--pixel); padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.md-preview h1, .md-preview h2, .md-preview h3, .md-preview h4, .md-preview h5, .md-preview h6 { margin: 1.8em 0 .6em; line-height: 1.25; font-weight: 600; scroll-margin-top: calc(var(--reader-sticky-h, 0px) + 16px); }
+/* El contenido del lector va entero en Geist Mono; Geist Pixel queda para la cabecera de la app. */
+.md-preview h1 { font: 600 24px/1.2 var(--mono); }
+.md-preview h2 { font: 600 18px/1.25 var(--mono); padding-bottom: 6px; border-bottom: 1px solid var(--line); }
 .md-preview h3 { font-size: 15px; }
 .md-preview h4, .md-preview h5, .md-preview h6 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .md-preview p, .md-preview ul, .md-preview ol, .md-preview blockquote, .md-preview pre, .md-preview table { margin: 0 0 1em; }

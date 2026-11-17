@@ -275,7 +275,10 @@ siempre permite forzarlo.
 - Presentaciones: `## Slide N — <título>` por diapositiva; notas del orador opcionales como
   bloque `> Notes:`.
 - PDF: títulos por tamaño de fuente relativo al cuerpo dominante; unir líneas partidas y
-  palabras cortadas con guion; quitar cabeceras/pies repetidos en todas las páginas. Si el PDF
+  palabras cortadas con guion; quitar cabeceras/pies repetidos en todas las páginas. Las listas
+  numeradas conservan su número original. Los enlaces (anotaciones Link con URL http/https/mailto)
+  se asocian al texto que cubren por QuadPoints, o por su rectángulo si no los hay; un enlace
+  partido en dos líneas se une. Si el PDF
   no tiene capa de texto, avisar («This PDF looks scanned…») en vez de devolver vacío.
 - Nombre de salida: `[nombre-original].md`; ZIP: `[nombre-original]-md.zip`.
 
@@ -291,6 +294,17 @@ siempre permite forzarlo.
 - `marked` → **siempre** `DOMPurify.sanitize()` antes de insertar (el HTML de origen y el
   Markdown pueden traer `<script>`, `on*=` o `javascript:`). Es el único `innerHTML` permitido.
 - Índice generado a partir de h1–h3, con anclas estables.
+- Todo el contenido renderizado va en Geist Mono (títulos incluidos, en peso 600); Geist Pixel
+  queda solo para la cabecera de la app.
+- La barra del lector y el índice son `position: sticky`. `reader.js` mide sus alturas con un
+  `ResizeObserver` y las guarda en `--reader-bar-h` y `--reader-sticky-h` (los títulos usan
+  `scroll-margin-top` y los paneles de Split ocupan el resto de la ventana). En pantallas
+  estrechas el índice se pliega al pulsar un enlace. Ningún ancestro de `.reader` puede tener
+  `overflow` distinto de `visible`, o el sticky deja de funcionar.
+- Split: desplazamiento sincronizado anclado a títulos (los ATX del fuente, fuera de bloques de
+  código, emparejados en orden con los h1–h6 renderizados; entre dos anclas se interpola). Manda
+  el primer panel que se mueve hasta 150 ms después de su último evento, para que no rebote. En
+  Split, el índice desplaza el panel de la vista previa, no la página.
 - Enlaces del documento con `rel="noopener noreferrer"` y `target="_blank"`.
 
 ## HTML

@@ -19,9 +19,53 @@ async function loadPdfjs() {
   pdfjsLib = lib;
 }
 
+/* ---------- Enlaces ---------- */
+
+// El texto enlazado queda entre marcadores de uso privado, con el número del enlace codificado en
+// un segundo carácter: así sobrevive a la unión de líneas y párrafos y se convierte al final.
+const LINK_OPEN = "\uE000";
+const LINK_CLOSE = "\uE001";
+const LINK_BASE = 0xe100;
+
+// Rectángulos de una anotación de enlace. Si ocupa varias líneas, QuadPoints trae uno por línea;
+// el `rect` general las engloba todas y cogería texto que no está enlazado.
+function linkRects(a) {
+  const q = a.quadPoints;
+  if (!q || q.length < 8) return [a.rect];
+  const rects = [];
+  for (let i = 0; i + 8 <= q.length; i += 8) {
+    const xs = [q[i], q[i + 2], q[i + 4], q[i + 6]];
+    const ys = [q[i + 1], q[i + 3], q[i + 5], q[i + 7]];
+    rects.push([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]);
+  }
+  return rects;
+}
+
+// El centro del trozo de texto tiene que caer dentro de alguno de los rectángulos del enlace.
+function linkAt(links, x, y, width, size) {
+  const cx = x + width / 2;
+  const cy = y + size * 0.3;
+  return links.find(({ rects }) => rects.some(([x1, y1, x2, y2]) => cx >= x1 - 1 && cx <= x2 + 1 && cy >= y1 - 1 && cy <= y2 + 1));
+}
+
+function linkify(md, hrefs) {
+  // Un enlace partido en dos líneas deja dos tramos seguidos con el mismo número: se unen.
+  let merged = md;
+  for (let prev = ""; prev !== merged;) {
+    prev = merged;
+    merged = merged.replace(/\uE000([\uE100-\uF8FF])([^\uE001]*)\uE001(\s*)\uE000\1/g, "\uE000$1$2$3");
+  }
+  return merged
+    .replace(/\uE000([\uE100-\uF8FF])([\s\S]*?)\uE001/g, (m, code, inner) => {
+      const href = hrefs[code.charCodeAt(0) - LINK_BASE];
+      return href && inner.trim() ? `[${inner}](${href.replace(/[()\s]/g, encodeURIComponent)})` : inner;
+    })
+    .replace(/[\uE000\uE001]|(?<=\uE000)[\uE100-\uF8FF]/g, "");
+}
+
 /* ---------- Líneas de una página ---------- */
 
-function pageLines(items, page) {
+function pageLines(items, page, links = []) {
   const lines = [];
   let cur = null;
   for (const it of items) {
@@ -35,10 +79,17 @@ function pageLines(items, page) {
     }
     const newLine = !cur || cur.eol || Math.abs(y - cur.y) > Math.max(size, cur.size) * 0.5 || x < cur.xEnd - size;
     if (newLine) {
-      cur = { page, x, y, xEnd: x, size, text: "", chars: new Map(), space: false, eol: false };
+      if (cur && cur.link >= 0) cur.text += LINK_CLOSE;
+      cur = { page, x, y, xEnd: x, size, text: "", chars: new Map(), space: false, eol: false, link: -1 };
       lines.push(cur);
     } else if ((cur.space || x - cur.xEnd > size * 0.2) && !/\s$/.test(cur.text) && !/^\s/.test(it.str)) {
       cur.text += " ";
+    }
+    const link = links.length ? (linkAt(links, x, y, it.width, size)?.idx ?? -1) : -1;
+    if (link !== cur.link) {
+      if (cur.link >= 0) cur.text += LINK_CLOSE;
+      if (link >= 0) cur.text += LINK_OPEN + String.fromCharCode(LINK_BASE + link);
+      cur.link = link;
     }
     cur.text += it.str;
     cur.xEnd = Math.max(cur.xEnd, x + it.width);
@@ -48,6 +99,7 @@ function pageLines(items, page) {
     const key = Math.round(size * 2) / 2;
     cur.chars.set(key, (cur.chars.get(key) || 0) + it.str.length);
   }
+  if (cur && cur.link >= 0) cur.text += LINK_CLOSE;
   for (const l of lines) {
     l.text = l.text.replace(/\s+/g, " ").trim();
     l.size = [...l.chars].sort((p, q) => q[1] - p[1])[0][0];
@@ -201,7 +253,7 @@ function buildBlocks(pages, levels) {
         const bullet = BULLET.exec(line.text);
         const ordered = !bullet && ORDERED.exec(line.text);
         if (bullet || ordered) {
-          blocks.push({ type: "item", ordered: !!ordered, x: line.x, text: (bullet || ordered)[2] });
+          blocks.push({ type: "item", number: ordered ? +ordered[1] : 0, x: line.x, text: (bullet || ordered)[2] });
         } else if (last && last.type === "item" && close && line.x > last.x + 2) {
           last.text = joinText(last.text, line.text);
         } else if (last && last.type === "para" && close && !prevShort) {
@@ -219,16 +271,17 @@ function buildBlocks(pages, levels) {
   return blocks;
 }
 
-function renderBlocks(blocks, sink) {
+function renderBlocks(blocks, sink, hrefs = []) {
   const out = [];
   blocks.forEach((b, i) => {
     const prev = blocks[i - 1];
     const sep = i === 0 ? "" : b.type === "item" && prev.type === "item" ? "\n" : "\n\n";
     let md;
-    if (b.type === "heading") md = `${"#".repeat(b.level)} ${escapeMarkdown(b.text)}`;
-    else if (b.type === "item") md = `${b.ordered ? "1." : "-"} ${escapeMarkdown(b.text)}`;
+    // Las listas numeradas conservan su número: entre párrafos, «1.» reiniciaría la cuenta.
+    if (b.type === "heading") md = `${"#".repeat(b.level)} ${linkify(escapeMarkdown(b.text, false), hrefs)}`;
+    else if (b.type === "item") md = `${b.number ? `${b.number}.` : "-"} ${linkify(escapeMarkdown(b.text), hrefs)}`;
     else if (b.type === "image") md = sink.add("", b.blob, "png", b.key);
-    else md = escapeMarkdown(b.text);
+    else md = linkify(escapeMarkdown(b.text), hrefs);
     out.push(sep + md);
   });
   return out.join("");
@@ -348,6 +401,7 @@ registerConverter({
 
     try {
       const pages = [];
+      const hrefs = []; // URL de los enlaces del documento, en el orden en que aparecen
       let title = "";
       try { title = ((await doc.getMetadata()).info?.Title || "").trim(); } catch (e) {}
       // Muchos generadores dejan como título el nombre del archivo de origen: no sirve.
@@ -358,7 +412,18 @@ registerConverter({
         const page = await doc.getPage(n);
         const [, y0, , y1] = page.view;
         const text = await page.getTextContent();
-        const lines = pageLines(text.items, n).map((l) => ({ ...l, y: l.y - y0 }));
+        let links = [];
+        try {
+          links = (await page.getAnnotations({ intent: "display" }))
+            .filter((a) => a.subtype === "Link" && /^(https?:|mailto:)/i.test(a.url || ""))
+            .map((a) => {
+              // Mismo número para la misma URL: así se pueden unir los tramos de un enlace partido.
+              let idx = hrefs.indexOf(a.url);
+              if (idx < 0) idx = hrefs.push(a.url) - 1;
+              return { rects: linkRects(a), idx };
+            });
+        } catch (e) {}
+        const lines = pageLines(text.items, n, links).map((l) => ({ ...l, y: l.y - y0 }));
         let images = [];
         try {
           images = pageImages(await page.getOperatorList(), pdfjsLib.OPS).map((img) => ({ ...img, image: true, y: img.y - y0 }));
@@ -399,7 +464,7 @@ registerConverter({
         }
       }
       const sink = createImageSink(opts.includeImages);
-      const markdown = renderBlocks(buildBlocks(pages, levels), sink);
+      const markdown = renderBlocks(buildBlocks(pages, levels), sink, hrefs);
       const warnings = [...ocr.warnings];
       if (emptyPages) warnings.push(`${emptyPages} ${emptyPages === 1 ? "page has" : "pages have"} no text layer (scanned?)`);
       warnings.push(...sink.warnings());
