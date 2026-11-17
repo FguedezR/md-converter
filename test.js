@@ -4,7 +4,7 @@ const $ = (id) => document.getElementById(id);
 const FIXED_DATE = "2000-01-01T00:00:00Z"; // la fecha del front matter cambiaría en cada ejecución
 // ?set=dev lee _test/dev/manifest.json (archivos sintéticos) en lugar de _test/manifest.json.
 const SET = (new URLSearchParams(location.search).get("set") || "").replace(/[^\w-]/g, "");
-const BASE = SET ? `_test/${SET}/` : "_test/";
+const BASE = SET ? `/_test/${SET}/` : "/_test/";
 
 async function fetchOk(url, as) {
   const res = await fetch(url, { cache: "no-store" });

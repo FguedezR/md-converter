@@ -5,32 +5,32 @@ const converters = [];
 
 // Cada formato con conversor apunta al script que lo registra; se carga solo cuando hace falta.
 const CONVERTER_SCRIPTS = {
-  txt: "converters/txt.js",
-  html: "converters/html.js",
-  docx: "converters/docx.js",
-  docm: "converters/docx.js",
-  pdf: "converters/pdf.js",
-  pptx: "converters/pptx.js",
-  ppsx: "converters/pptx.js",
-  pptm: "converters/pptx.js",
-  odt: "converters/odf.js",
-  odp: "converters/odf.js",
-  abw: "converters/abw.js",
-  zabw: "converters/abw.js",
-  rtf: "converters/pandoc.js",
-  rst: "converters/pandoc.js",
-  tex: "converters/pandoc.js",
-  doc: "converters/ole.js",
-  ppt: "converters/ole.js",
-  pps: "converters/ole.js",
-  wps: "converters/ole.js",
-  dps: "converters/ole.js",
+  txt: "/converters/txt.js",
+  html: "/converters/html.js",
+  docx: "/converters/docx.js",
+  docm: "/converters/docx.js",
+  pdf: "/converters/pdf.js",
+  pptx: "/converters/pptx.js",
+  ppsx: "/converters/pptx.js",
+  pptm: "/converters/pptx.js",
+  odt: "/converters/odf.js",
+  odp: "/converters/odf.js",
+  abw: "/converters/abw.js",
+  zabw: "/converters/abw.js",
+  rtf: "/converters/pandoc.js",
+  rst: "/converters/pandoc.js",
+  tex: "/converters/pandoc.js",
+  doc: "/converters/ole.js",
+  ppt: "/converters/ole.js",
+  pps: "/converters/ole.js",
+  wps: "/converters/ole.js",
+  dps: "/converters/ole.js",
 };
 
 // Formatos que admiten «Include images (ZIP)».
 const IMAGE_FORMATS = ["docx", "docm", "pptx", "ppsx", "pptm", "odt", "odp", "pdf"];
 
-const JSZIP_SRC = "vendor/jszip-3.10.2.min.js";
+const JSZIP_SRC = "/vendor/jszip-3.10.2.min.js";
 
 function registerConverter(converter) {
   if (converters.some((c) => c.id === converter.id)) return;

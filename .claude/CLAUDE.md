@@ -25,10 +25,17 @@ workers/
 vendor/             # librerías de terceros minificadas, versión fijada en el nombre
 fonts/              # GeistMono-Variable.woff2, GeistPixel-Square.woff2 + LICENSE-Geist-OFL.txt
 test.html           # banco de pruebas en el navegador (ver «Pruebas»)
+<formato>-to-markdown/index.html, markdown-viewer/index.html, 404.html, sitemap.xml
+                    # GENERADOS por tools/pages.mjs a partir de index.html: no editar a mano
+tools/pages.mjs     # generador de páginas por formato (Node, sin dependencias; ver «Páginas y SEO»)
+tools/og.html/.css/.js  # plantilla de las imágenes Open Graph
+og/                 # imágenes Open Graph 1200×630 (default.png + una por página)
+robots.txt
 test.js             # lógica del banco (archivo aparte: la CSP no permite scripts en línea)
 favicon.svg / favicon.ico
 _headers            # cabeceras de Cloudflare Pages (CSP incluida)
 .gitignore          # .DS_Store, _test/ y .wrangler/ (estado local de wrangler)
+.claude/CLAUDE.md   # este archivo: en .claude/ para que Cloudflare Pages no lo publique en la raíz
 ```
 
 - **Sin build step**: nada de package.json, npm, bundler, TypeScript ni frameworks. Lo que
@@ -40,7 +47,8 @@ _headers            # cabeceras de Cloudflare Pages (CSP incluida)
 - Carga bajo demanda: `loadScript(src)` (promesa cacheada por URL) para bundles IIFE/UMD;
   `import()` dinámico solo para librerías que únicamente se publican como ES module (pdf.js).
   Nada pesado en la carga inicial: la página arranca solo con `app.js`, `detect.js`,
-  `postprocess.js`, `convert.js`, `reader.js`, marked y DOMPurify. Los propios conversores
+  `postprocess.js`, `convert.js`, `reader.js`, marked y DOMPurify (el JSON-LD del `<head>` es un
+  bloque de datos: la CSP no lo bloquea). Los propios conversores
   también se cargan bajo demanda (`CONVERTER_SCRIPTS` en `convert.js`).
 - Prohibido LibreOffice WASM y cualquier conversión en servidor.
 
@@ -223,8 +231,9 @@ siempre permite forzarlo.
     todo el texto en una sola sección.
   - Título del front matter desde `\x05SummaryInformation` (con su página de códigos).
   - WPS/DPS de Kingsoft: mismo camino que DOC/PPT si el contenedor trae `WordDocument` o
-    `PowerPoint Document`; si no, mensaje para guardarlo como DOCX/PPTX. **Pendiente de probar
-    con muestras reales.**
+    `PowerPoint Document`; si no, mensaje para guardarlo como DOCX/PPTX. Probado el 2026-11-17
+    con archivos de WPS Office para Mac: misma estructura que DOC/PPT (más un stream
+    `WpsCustomData` que se ignora).
 - **No soportados**: WPD, LWP, WPS de Microsoft Works. Mensaje claro: «This format can't be
   converted in the browser. Save it as DOCX in your word processor and convert that file.» No
   se intenta ninguna conversión parcial.
@@ -285,6 +294,8 @@ siempre permite forzarlo.
 ## JavaScript
 
 - Vanilla, scripts clásicos. Helper `const $ = (id) => document.getElementById(id);`.
+- **Rutas absolutas desde la raíz** (`/vendor/…`, `/converters/…`, `/workers/…`) en HTML y JS:
+  las páginas por formato viven en subcarpetas y una ruta relativa se rompería allí.
 - 2 espacios, comillas dobles, punto y coma, funciones flecha, plantillas literales.
 - Estado en `let` de nivel superior; funciones pequeñas con nombre.
 - Comentarios en español y solo para explicar el porqué.
@@ -296,6 +307,33 @@ siempre permite forzarlo.
 - Errores visibles en `#summary` y en la fila del archivo (`.err`), nunca solo en consola. Si
   falta soporte del navegador (DecompressionStream, workers de módulo), aviso claro.
 - Tamaños con `fmt(bytes)`. Archivos > 100 MB: avisar antes de convertir.
+
+## Páginas y SEO
+
+- Páginas estáticas por formato (decisión del 2026-11-17): `tools/pages.mjs` toma `index.html`
+  como plantilla y reescribe el bloque `<!-- seo -->` (title, description, canonical, Open
+  Graph), el bloque `<!-- page -->` (H1 + párrafo `.intro`), `#dropTitle`, el enlace a la portada,
+  `aria-current` en el pie y `data-format` en `<html>`. Genera también `404.html` (noindex; sin
+  ella Cloudflare Pages serviría `index.html` con 200 en cualquier URL) y `sitemap.xml`.
+- **Cada cambio en `index.html` exige `node tools/pages.mjs`**; `node tools/pages.mjs --check`
+  falla si algo está desactualizado. Los textos de cada página (únicos, en inglés) y `LASTMOD`
+  viven en el propio script.
+- Variantes agrupadas para no crear páginas casi idénticas: DOCX cubre DOCM, PPTX cubre
+  PPSX/PPTM, PPT cubre PPS, ABW cubre ZABW. WPD, LWP y Works tienen página que explica la
+  alternativa. `/markdown-viewer/` presenta el lector.
+- `data-format` preselecciona el formato «blando» (`softFormat` en `app.js`): si se suelta un
+  archivo de otro formato reconocible se usa el detectado; si el usuario cambia el selector, manda
+  su elección.
+- Imágenes Open Graph: con el servidor local en marcha, capturar `/tools/og.html?name=<Nombre>`
+  (o `?viewer`) a 1200×630 y guardarla como `og/<slug>.png`. Se rehacen solo si cambia el diseño o
+  se añade una página.
+- Novedades: bloque `<details class="changelog">` en el pie de `index.html`. Cada versión añade un
+  `<li>` arriba y actualiza el `<summary>`; luego regenerar las páginas.
+- `robots.txt` propio (Cloudflare antepone sus reglas gestionadas si están activas en la zona).
+  `test.html` y `/tools/` van con `noindex`.
+- Revisión del 2026-11-17 (Lighthouse 13.6, móvil simulado): rendimiento 98, accesibilidad,
+  buenas prácticas y SEO 100. Contraste AA en todos los pares de tokens (violeta incluido); foco
+  visible en todos los elementos al navegar con Tab.
 
 ## Cabeceras (`_headers`)
 

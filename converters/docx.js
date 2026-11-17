@@ -1,7 +1,7 @@
 // DOCX/DOCM: mammoth → HTML → turndown (htmlToMarkdown de html.js).
 // mammoth localiza el documento por las relaciones del paquete, así que DOCM funciona igual;
 // las macros (vbaProject.bin) nunca se leen.
-const MAMMOTH = "vendor/mammoth-1.13.0.browser.min.js";
+const MAMMOTH = "/vendor/mammoth-1.13.0.browser.min.js";
 
 // Se suman al mapa de estilos por defecto de mammoth (Heading 1…6 ya vienen incluidos).
 const DOCX_STYLE_MAP = [
@@ -27,7 +27,7 @@ registerConverter({
   id: "docx",
   label: "Word (DOCX)",
   extensions: ["docx", "docm"],
-  load: () => Promise.all([loadScript(MAMMOTH), loadScript("converters/html.js").then(() => loadTurndown())]),
+  load: () => Promise.all([loadScript(MAMMOTH), loadScript("/converters/html.js").then(() => loadTurndown())]),
   convert: async (buffer, opts, ctx) => {
     ctx.progress(0.05);
     // Cada imagen se queda como «md-image:N»; sus bytes solo se leen si van al ZIP.

@@ -142,7 +142,7 @@ registerConverter({
   id: "pptx",
   label: "PowerPoint (PPTX)",
   extensions: ["pptx", "ppsx", "pptm"],
-  load: () => loadScript("converters/zipxml.js").then(() => loadZipXml()),
+  load: () => loadScript("/converters/zipxml.js").then(() => loadZipXml()),
   convert: async (buffer, opts, ctx) => {
     const zip = await JSZip.loadAsync(buffer);
     const presentation = await readXml(zip, "ppt/presentation.xml");

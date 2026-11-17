@@ -1,6 +1,6 @@
 // Formatos binarios antiguos, solo texto: DOC (y WPS de Kingsoft) y PPT/PPS (y DPS de Kingsoft).
 // cfb (SheetJS) abre el contenedor OLE; el texto se saca a mano según [MS-DOC] y [MS-PPT].
-const CFB_SRC = "vendor/cfb-1.2.2.min.js";
+const CFB_SRC = "/vendor/cfb-1.2.2.min.js";
 const TEXT_ONLY_WARNING = "Text only: headings, tables and formatting are lost";
 
 const oleStream = (cfb, name) => {

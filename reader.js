@@ -1,5 +1,5 @@
 // Lector: Markdown → HTML saneado (marked + DOMPurify), índice h1–h3 y vistas Preview · Source · Split.
-const HLJS = "vendor/highlight-11.12.0.min.js";
+const HLJS = "/vendor/highlight-11.12.0.min.js";
 const READER_VIEWS = ["preview", "source", "split"];
 const HEADING_PREFIX = "md-"; // evita choques entre las anclas del documento y los id de la página
 

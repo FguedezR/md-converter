@@ -1,0 +1,178 @@
+<!doctype html>
+<!-- Generado por tools/pages.mjs a partir de index.html: no editar a mano. -->
+<html lang="en" data-accent="amber" data-format="pptx">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#07090d">
+  <!-- seo -->
+  <title>PowerPoint to Markdown converter (PPTX, PPSX) · free</title>
+  <meta name="description" content="Convert PowerPoint PPTX, PPSX and PPTM to Markdown: one section per slide, bullet lists, tables and optional speaker notes. Nothing is uploaded.">
+  <link rel="canonical" href="https://md.ferguedez.dev/pptx-to-markdown/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MD Converter">
+  <meta property="og:title" content="PowerPoint to Markdown converter (PPTX, PPSX) · free">
+  <meta property="og:description" content="Convert PowerPoint PPTX, PPSX and PPTM to Markdown: one section per slide, bullet lists, tables and optional speaker notes. Nothing is uploaded.">
+  <meta property="og:url" content="https://md.ferguedez.dev/pptx-to-markdown/">
+  <meta property="og:image" content="https://md.ferguedez.dev/og/pptx-to-markdown.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="PowerPoint to Markdown · MD Converter">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- /seo -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="preload" href="/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/GeistPixel-Square.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div class="topbar">
+        <p class="eyebrow">Runs in your browser · no uploads</p>
+        <nav class="links" aria-label="Links">
+          <a href="/">MD Converter</a>
+          <a href="https://ferguedez.dev" target="_blank" rel="noopener">ferguedez.dev<span aria-hidden="true"> ↗</span></a>
+          <a href="https://github.com/FguedezR/md-converter" target="_blank" rel="noopener">GitHub<span aria-hidden="true"> ↗</span></a>
+        </nav>
+      </div>
+      <!-- page -->
+      <h1>PowerPoint to<br>Markdown</h1>
+      <p class="intro">Convert PowerPoint presentations (PPTX, PPSX and PPTM) to Markdown with one “Slide N — title” section per slide, bullet lists, tables and links. Speaker notes can be added as quotes, and images can come with it as a ZIP.</p>
+      <!-- /page -->
+    </header>
+
+    <div id="support" class="notice warn" role="alert" hidden></div>
+
+    <label id="drop" class="drop" tabindex="0">
+      <input id="file" type="file" multiple hidden>
+      <svg id="iconDoc" class="drop-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M5.75 2.75h8.5l4 4v14.5H5.75z"/><path d="M14.25 2.75v4h4"/><path d="M8.75 11.25h6.5M8.75 14.25h6.5M8.75 17.25h4"/></svg>
+      <span id="dropTitle" class="drop-title">Drop PowerPoint files</span>
+      <span id="dropHint" class="drop-hint">PDF · DOCX · PPTX · ODT · ODP · RTF · LaTeX · HTML · and more · several at once · .md opens in the reader</span>
+    </label>
+    <button class="link" type="button" data-open-md>Have a Markdown file? Open it in the reader →</button>
+
+    <section class="controls first" aria-label="Options">
+      <div class="field">
+        <label for="sourceFormat">Source format</label>
+        <select id="sourceFormat" class="wide">
+          <option value="auto">Auto</option>
+        </select>
+      </div>
+      <fieldset class="checks">
+        <legend>Output</legend>
+        <label class="check"><input id="frontMatter" type="checkbox"><span>Front matter</span></label>
+        <label class="check"><input id="speakerNotes" type="checkbox"><span>Speaker notes</span></label>
+        <label class="check"><input id="includeImages" type="checkbox"><span>Include images (ZIP)</span></label>
+      </fieldset>
+      <div class="actions">
+        <button id="clear" type="button" disabled>Clear</button>
+        <button id="convert" class="primary" type="button" disabled>Convert</button>
+      </div>
+    </section>
+
+    <div id="consent" class="notice consent" role="alertdialog" aria-labelledby="consentText" hidden>
+      <p id="consentText"></p>
+      <div class="actions">
+        <button id="consentNo" type="button">Skip</button>
+        <button id="consentYes" class="primary" type="button">Download</button>
+      </div>
+    </div>
+
+    <div id="progress" class="progress" hidden><span id="progressBar"></span></div>
+    <p id="summary" class="status" role="status" aria-live="polite">Waiting for documents.</p>
+
+    <div class="table-wrap">
+      <table id="files" hidden>
+        <thead><tr><th>File</th><th>Format</th><th class="num">Size</th><th>Result</th><th class="num"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <section id="reader" class="reader" aria-label="Reader" data-view="preview" hidden>
+      <div class="reader-bar">
+        <div class="tabs" role="group" aria-label="View">
+          <button type="button" data-reader-view="preview" aria-pressed="true">Preview</button>
+          <button type="button" data-reader-view="source" aria-pressed="false">Source</button>
+          <button type="button" data-reader-view="split" aria-pressed="false">Split</button>
+        </div>
+        <span id="readerName" class="reader-name"></span>
+        <div class="reader-actions">
+          <button id="copyMd" class="link" type="button">Copy</button>
+          <button id="downloadMd" class="link" type="button">Download <span id="downloadExt">.md</span> <span aria-hidden="true">↓</span></button>
+          <button class="link" type="button" data-open-md>Open .md…</button>
+        </div>
+      </div>
+      <p id="readerStatus" class="reader-status" role="status" aria-live="polite"></p>
+      <details id="toc" class="toc" hidden>
+        <summary>Contents <span id="tocCount" class="toc-count"></span></summary>
+        <ol id="tocList"></ol>
+      </details>
+      <div class="reader-body">
+        <pre id="mdSource" class="md-source" tabindex="0" aria-label="Markdown source"></pre>
+        <article id="mdPreview" class="md-preview" aria-label="Preview"></article>
+      </div>
+    </section>
+    <input id="mdFile" type="file" accept=".md,.markdown,text/markdown" hidden>
+
+    <footer class="foot">
+      <nav class="foot-block" aria-label="Formats">
+        <h2>Convert to Markdown</h2>
+        <ul class="foot-links">
+          <li><a href="/pdf-to-markdown/">PDF</a></li>
+          <li><a href="/docx-to-markdown/">Word (DOCX)</a></li>
+          <li><a href="/pptx-to-markdown/" aria-current="page">PowerPoint (PPTX)</a></li>
+          <li><a href="/odt-to-markdown/">ODT</a></li>
+          <li><a href="/odp-to-markdown/">ODP</a></li>
+          <li><a href="/rtf-to-markdown/">RTF</a></li>
+          <li><a href="/latex-to-markdown/">LaTeX</a></li>
+          <li><a href="/rst-to-markdown/">reStructuredText</a></li>
+          <li><a href="/html-to-markdown/">HTML</a></li>
+          <li><a href="/txt-to-markdown/">Plain text</a></li>
+          <li><a href="/doc-to-markdown/">Word 97–2003 (DOC)</a></li>
+          <li><a href="/ppt-to-markdown/">PowerPoint 97–2003 (PPT)</a></li>
+          <li><a href="/abw-to-markdown/">AbiWord</a></li>
+          <li><a href="/wps-to-markdown/">WPS Writer</a></li>
+          <li><a href="/dps-to-markdown/">WPS Presentation</a></li>
+          <li><a href="/wpd-to-markdown/">WordPerfect</a></li>
+          <li><a href="/lwp-to-markdown/">Lotus Word Pro</a></li>
+          <li><a href="/works-to-markdown/">Microsoft Works</a></li>
+          <li><a href="/markdown-viewer/">Markdown viewer</a></li>
+        </ul>
+      </nav>
+      <nav class="foot-block" aria-label="More tools">
+        <h2>More tools</h2>
+        <ul class="foot-links">
+          <li><a href="https://webp.ferguedez.dev/" target="_blank" rel="noopener">WebP Converter<span aria-hidden="true"> ↗</span></a> <span class="dim">(Spanish)</span></li>
+          <li><a href="https://video.ferguedez.dev/" target="_blank" rel="noopener">Video Converter<span aria-hidden="true"> ↗</span></a> <span class="dim">(Spanish)</span></li>
+        </ul>
+      </nav>
+      <details class="changelog">
+        <summary>What’s new <span class="dim">· v1.0 · 17 Nov 2026</span></summary>
+        <ol>
+          <li>
+            <h3><time datetime="2026-11-17">17 Nov 2026</time> · v1.0</h3>
+            <ul>
+              <li>PDF, Word (DOCX, DOCM), PowerPoint (PPTX, PPSX, PPTM), OpenDocument, AbiWord, HTML and plain text to Markdown.</li>
+              <li>RTF, reStructuredText and LaTeX with pandoc, downloaded only the first time you need it.</li>
+              <li>Legacy Word and PowerPoint (DOC, PPT, PPS) and Kingsoft WPS/DPS as text only.</li>
+              <li>Optional images as a ZIP, front matter and speaker notes.</li>
+              <li>Markdown reader with preview, source and split views.</li>
+            </ul>
+          </li>
+        </ol>
+      </details>
+      <p>Files never leave your device. Conversion happens locally with open-source libraries.</p>
+    </footer>
+  </main>
+  <script src="/vendor/marked-18.1.3.umd.js"></script>
+  <script src="/vendor/purify-3.4.17.min.js"></script>
+  <script src="/detect.js"></script>
+  <script src="/postprocess.js"></script>
+  <script src="/convert.js"></script>
+  <script src="/reader.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

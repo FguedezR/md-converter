@@ -1,6 +1,6 @@
 // HTML → Markdown con turndown. docx.js reutiliza htmlToMarkdown() sobre la salida de mammoth.
-const TURNDOWN = "vendor/turndown-7.2.4.js";
-const TURNDOWN_GFM = "vendor/turndown-plugin-gfm-1.0.2.js";
+const TURNDOWN = "/vendor/turndown-7.2.4.js";
+const TURNDOWN_GFM = "/vendor/turndown-plugin-gfm-1.0.2.js";
 
 const loadTurndown = () => Promise.all([loadScript(TURNDOWN), loadScript(TURNDOWN_GFM)]);
 

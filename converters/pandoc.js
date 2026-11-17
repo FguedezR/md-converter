@@ -11,7 +11,7 @@ let pandocWorker = null;
 // Mientras no exista el bucket, en local se puede usar la copia de _test/pandoc/ con ?localpandoc.
 function pandocUrl() {
   const local = ["localhost", "127.0.0.1"].includes(location.hostname) && new URLSearchParams(location.search).has("localpandoc");
-  return new URL("pandoc.wasm", local ? new URL("_test/pandoc/", location.href) : PANDOC_BASE).href;
+  return new URL("pandoc.wasm", local ? new URL("/_test/pandoc/", location.href) : PANDOC_BASE).href;
 }
 
 async function pandocCached(url) {
@@ -28,7 +28,7 @@ function stopPandoc() {
 }
 
 function runPandoc(options, text, ctx) {
-  pandocWorker ||= new Worker("workers/pandoc-worker.js", { type: "module" });
+  pandocWorker ||= new Worker("/workers/pandoc-worker.js", { type: "module" });
   const worker = pandocWorker;
   return new Promise((resolve, reject) => {
     const abort = () => { stopPandoc(); reject(new DOMException("Canceled", "AbortError")); };

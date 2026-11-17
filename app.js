@@ -38,8 +38,16 @@ function savePrefs() {
 }
 
 const options = () => ({ frontMatter: $("frontMatter").checked, speakerNotes: $("speakerNotes").checked, includeImages: $("includeImages").checked });
+// En las páginas por formato (/pdf-to-markdown/…) ese formato llega preseleccionado, pero «blando»:
+// si se suelta otro documento reconocible, se usa el detectado. Elegirlo a mano lo vuelve firme.
+const PAGE_FORMAT = document.documentElement.dataset.format || "";
+let softFormat = "";
 const forcedFormat = () => ($("sourceFormat").value === "auto" ? null : $("sourceFormat").value);
-const effectiveFormat = (item) => forcedFormat() || item.format;
+function effectiveFormat(item) {
+  const forced = forcedFormat();
+  if (forced && forced === softFormat && !["unknown", "txt"].includes(item.format)) return item.format;
+  return forced || item.format;
+}
 
 /* ---------- Soporte del navegador ---------- */
 
@@ -172,7 +180,7 @@ async function addFiles(fileList) {
     try {
       ({ format } = await detectFormat(new Uint8Array(await file.arrayBuffer()), file.name));
     } catch (e) {}
-    if (format === "md" && !forcedFormat()) { markdownFiles.push(file); continue; }
+    if (format === "md" && (!forcedFormat() || forcedFormat() === softFormat)) { markdownFiles.push(file); continue; }
     const item = { id: nextId++, file, format, status: "queued", result: null, markdown: "", error: "", progress: 0 };
     item.status = initialStatus(effectiveFormat(item));
     items.push(item);
@@ -317,7 +325,10 @@ function invalidate(predicate) {
   if (items.some((i) => i.status === "queued" && i.result)) summary("Options changed. Press Convert to apply them.");
 }
 
-$("sourceFormat").addEventListener("change", () => invalidate(() => true));
+$("sourceFormat").addEventListener("change", () => {
+  softFormat = "";
+  invalidate(() => true);
+});
 $("speakerNotes").addEventListener("change", () => {
   savePrefs();
   invalidate((item) => PRESENTATIONS.includes(effectiveFormat(item)) && !!item.result);
@@ -363,6 +374,10 @@ drop.addEventListener("drop", (e) => {
 });
 
 fillFormatSelect();
+if (FORCEABLE.includes(PAGE_FORMAT)) {
+  $("sourceFormat").value = PAGE_FORMAT;
+  softFormat = PAGE_FORMAT;
+}
 loadPrefs();
 initReader();
 checkSupport();

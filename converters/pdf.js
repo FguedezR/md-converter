@@ -1,6 +1,6 @@
 // PDF: pdf.js extrae el texto con posiciones y aquí se reconstruye la estructura:
 // títulos por tamaño de fuente, párrafos unidos, guiones de corte y cabeceras/pies repetidos.
-const PDFJS_DIR = "vendor/pdfjs-6.5.438/";
+const PDFJS_DIR = "/vendor/pdfjs-6.5.438/";
 const pdfAsset = (file) => new URL(PDFJS_DIR + file, location.href).href;
 let pdfjsLib = null;
 

@@ -7,5 +7,9 @@
   Cache-Control: public, max-age=604800
 /vendor/*
   Cache-Control: public, max-age=604800
+/og/*
+  Cache-Control: public, max-age=604800
 /test.html
+  X-Robots-Tag: noindex
+/tools/*
   X-Robots-Tag: noindex

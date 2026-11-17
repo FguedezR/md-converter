@@ -283,7 +283,7 @@ registerConverter({
   id: "odf",
   label: "OpenDocument",
   extensions: ["odt", "odp"],
-  load: () => loadScript("converters/zipxml.js").then(() => loadZipXml()),
+  load: () => loadScript("/converters/zipxml.js").then(() => loadZipXml()),
   convert: async (buffer, opts, ctx) => {
     const zip = await JSZip.loadAsync(buffer);
     const content = await readXml(zip, "content.xml");
