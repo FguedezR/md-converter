@@ -115,7 +115,7 @@ function renderInline(segments) {
     if (s.b) md = `**${md}**`;
     if (s.href) md = `[${md}](${s.href.replace(/[()\s]/g, encodeURIComponent)})`;
     return lead + md + trail;
-  }).join("").replace(/ *\\\n */g, "\\\n").trim();
+  }).join("").replace(/ {2,}/g, " ").replace(/ *\\\n */g, "\\\n").trim();
 }
 
 /* ---------- Imágenes ---------- */

@@ -20,6 +20,11 @@ const CONVERTER_SCRIPTS = {
   rtf: "converters/pandoc.js",
   rst: "converters/pandoc.js",
   tex: "converters/pandoc.js",
+  doc: "converters/ole.js",
+  ppt: "converters/ole.js",
+  pps: "converters/ole.js",
+  wps: "converters/ole.js",
+  dps: "converters/ole.js",
 };
 
 // Formatos que admiten «Include images (ZIP)».

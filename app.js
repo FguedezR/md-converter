@@ -84,7 +84,7 @@ function resultCell(item) {
   td.append(msg);
   const notes = [...(item.result?.warnings || [])];
   if (item.file.size > LARGE_FILE && status === "queued") notes.push(`Large file (${fmt(item.file.size)}): conversion may be slow and use a lot of memory`);
-  if (FORMATS[effectiveFormat(item)]?.textOnly) notes.push("Text only: headings, tables and formatting are lost");
+  if (FORMATS[effectiveFormat(item)]?.textOnly && status === "queued") notes.push("Text only: headings, tables and formatting are lost");
   if (notes.length) {
     const ul = document.createElement("ul");
     ul.className = "warns";

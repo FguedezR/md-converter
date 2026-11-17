@@ -83,7 +83,7 @@ rutas que se ejecuten) y cambiar el nombre del archivo.
 | JSZip | 3.10.2 | `jszip-3.10.2.min.js` | UMD, global `JSZip` | MIT o GPL-3 |
 | highlight.js | 11.12.0 | `highlight-11.12.0.min.js` (`@highlightjs/cdn-assets`, ~35 lenguajes comunes) | IIFE | BSD-3 |
 | browser_wasi_shim | 0.3.0 (la que fija el puente de pandoc) | `browser_wasi_shim-0.3.0/` | **solo ESM** | MIT o Apache-2.0 |
-| cfb | 1.2.2 (fase 3) | `cfb.min.js` de `dist/` | UMD, global `CFB` | Apache-2.0 |
+| cfb | 1.2.2 | `cfb-1.2.2.min.js` | UMD, global `CFB` | Apache-2.0 |
 
 - Solo ESM: pdf.js (se carga con `import()`) y browser_wasi_shim (lo importa el worker de pandoc,
   que por eso es un worker de módulo).
@@ -211,7 +211,20 @@ siempre permite forzarlo.
 - **Soportados**: PDF, DOCX, DOCM, HTML, TXT, PPTX, PPSX, PPTM, ODT, ODP, ABW, ZABW, RTF, RST,
   TEX, MD (solo lectura).
 - **Solo texto** (fase 3): DOC, PPT, PPS y WPS/DPS de Kingsoft. Se avisa de que se pierden
-  títulos, tablas y formato.
+  títulos, tablas y formato. Implementado en `converters/ole.js`:
+  - DOC: texto del documento principal por la tabla de piezas (Clx) del FIB; piezas en
+    Windows-1252 o UTF-16LE. De los campos se queda el resultado y de `HYPERLINK` el enlace;
+    `\x01`/`\x08` son marcadores de imagen. Notas al pie, cabeceras y pies no se extraen.
+    Word 6/95 (firma `0xA5DC` o nFib < 0xC1) y los cifrados dan un mensaje propio.
+  - PPT/PPS: directorio de persistencia (Current User → UserEditAtom → PersistDirectoryAtom)
+    para respetar el orden real de las diapositivas; texto de los marcadores
+    (SlideListWithText) y de los cuadros de texto del dibujo. Las notas se enlazan por el
+    `slideId` del SlidePersistAtom, no por id de persistencia. Si el directorio no se puede leer,
+    todo el texto en una sola sección.
+  - Título del front matter desde `\x05SummaryInformation` (con su página de códigos).
+  - WPS/DPS de Kingsoft: mismo camino que DOC/PPT si el contenedor trae `WordDocument` o
+    `PowerPoint Document`; si no, mensaje para guardarlo como DOCX/PPTX. **Pendiente de probar
+    con muestras reales.**
 - **No soportados**: WPD, LWP, WPS de Microsoft Works. Mensaje claro: «This format can't be
   converted in the browser. Save it as DOCX in your word processor and convert that file.» No
   se intenta ninguna conversión parcial.
@@ -298,7 +311,8 @@ siempre permite forzarlo.
 - `_test/` (ignorado en git) contiene archivos reales de cada formato y, junto a cada uno, el
   `.md` esperado (`informe.pdf` → `informe.expected.md`).
 - `_test/dev/` es un juego sintético (generado, no son archivos reales) que se abre con
-  `test.html?set=dev`; `?run` lo lanza al cargar.
+  `test.html?set=dev`; `?run` lo lanza al cargar. `_test/dev/legacy/` son archivos de prueba de Apache POI
+  (licencia Apache-2.0, `LICENSE-poi-test-data.txt`): DOC y PPT reales, cifrados, Word 6 y fuzzing.
 - `test.html` carga la lista de `_test/manifest.json`, convierte cada archivo con el mismo
   código que la app y muestra una tabla con OK/diferencias (diff por líneas). Se abre en local
   con un servidor estático (`python3 -m http.server`).
