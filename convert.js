@@ -32,6 +32,16 @@ const IMAGE_FORMATS = ["docx", "docm", "pptx", "ppsx", "pptm", "odt", "odp", "pd
 
 const JSZIP_SRC = "/vendor/jszip-3.10.2.min.js";
 
+// Idiomas de OCR incluidos en vendor/tessdata-4.0.0_best_int/ (bytes del modelo comprimido).
+const OCR_LANGS = {
+  eng: { label: "English", bytes: 2952873 },
+  spa: { label: "Español", bytes: 2100190 },
+  fra: { label: "Français", bytes: 707406 },
+  deu: { label: "Deutsch", bytes: 1333102 },
+  ita: { label: "Italiano", bytes: 1660998 },
+  por: { label: "Português", bytes: 1392239 },
+};
+
 function registerConverter(converter) {
   if (converters.some((c) => c.id === converter.id)) return;
   converters.push(converter);

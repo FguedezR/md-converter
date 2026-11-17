@@ -8,12 +8,12 @@
   <meta name="theme-color" content="#07090d">
   <!-- seo -->
   <title>PDF to Markdown converter · free, in your browser</title>
-  <meta name="description" content="Convert PDF to Markdown with headings, paragraphs and lists rebuilt from the layout. Repeated headers and footers are removed. Free, nothing is uploaded.">
+  <meta name="description" content="Convert PDF to Markdown with headings, paragraphs and lists rebuilt from the layout, and OCR for scanned pages. Free, and nothing is uploaded.">
   <link rel="canonical" href="https://md.ferguedez.dev/pdf-to-markdown/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MD Converter">
   <meta property="og:title" content="PDF to Markdown converter · free, in your browser">
-  <meta property="og:description" content="Convert PDF to Markdown with headings, paragraphs and lists rebuilt from the layout. Repeated headers and footers are removed. Free, nothing is uploaded.">
+  <meta property="og:description" content="Convert PDF to Markdown with headings, paragraphs and lists rebuilt from the layout, and OCR for scanned pages. Free, and nothing is uploaded.">
   <meta property="og:url" content="https://md.ferguedez.dev/pdf-to-markdown/">
   <meta property="og:image" content="https://md.ferguedez.dev/og/pdf-to-markdown.png">
   <meta property="og:image:width" content="1200">
@@ -40,7 +40,7 @@
       </div>
       <!-- page -->
       <h1>PDF to<br>Markdown</h1>
-      <p class="intro">Convert PDF files to clean Markdown. Headings are detected from font sizes, broken lines and hyphenated words are joined, and headers and footers repeated on every page are removed. Scanned PDFs without a text layer are flagged instead of returning an empty file.</p>
+      <p class="intro">Convert PDF files to clean Markdown. Headings are detected from font sizes, broken lines and hyphenated words are joined, and headers and footers repeated on every page are removed. Scanned pages can be recognised with OCR in English, Spanish, French, German, Italian or Portuguese, right in your browser.</p>
       <!-- /page -->
     </header>
 
@@ -60,6 +60,10 @@
         <select id="sourceFormat" class="wide">
           <option value="auto">Auto</option>
         </select>
+      </div>
+      <div class="field">
+        <label for="ocrLang">OCR language</label>
+        <select id="ocrLang"></select>
       </div>
       <fieldset class="checks">
         <legend>Output</legend>
@@ -150,8 +154,14 @@
         </ul>
       </nav>
       <details class="changelog">
-        <summary>What’s new <span class="dim">· v1.0 · 17 Nov 2026</span></summary>
+        <summary>What’s new <span class="dim">· v1.1 · 17 Nov 2026</span></summary>
         <ol>
+          <li>
+            <h3><time datetime="2026-11-17">17 Nov 2026</time> · v1.1</h3>
+            <ul>
+              <li>OCR for scanned PDFs in English, Spanish, French, German, Italian and Portuguese. It only runs if you accept, and only on the pages without text.</li>
+            </ul>
+          </li>
           <li>
             <h3><time datetime="2026-11-17">17 Nov 2026</time> · v1.0</h3>
             <ul>

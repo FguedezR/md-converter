@@ -28,16 +28,19 @@ function loadPrefs() {
   $("frontMatter").checked = !!p.frontMatter;
   $("speakerNotes").checked = !!p.speakerNotes;
   $("includeImages").checked = !!p.includeImages;
+  // Sin preferencia guardada, el idioma de OCR sigue al del navegador.
+  const browser = { en: "eng", es: "spa", fr: "fra", de: "deu", it: "ita", pt: "por" }[(navigator.language || "en").slice(0, 2)];
+  $("ocrLang").value = OCR_LANGS[p.ocrLang] ? p.ocrLang : browser || "eng";
 }
 
 function savePrefs() {
   try {
     const p = JSON.parse(localStorage.getItem("md-prefs") || "{}");
-    localStorage.setItem("md-prefs", JSON.stringify({ ...p, frontMatter: $("frontMatter").checked, speakerNotes: $("speakerNotes").checked, includeImages: $("includeImages").checked }));
+    localStorage.setItem("md-prefs", JSON.stringify({ ...p, frontMatter: $("frontMatter").checked, speakerNotes: $("speakerNotes").checked, includeImages: $("includeImages").checked, ocrLang: $("ocrLang").value }));
   } catch (e) {}
 }
 
-const options = () => ({ frontMatter: $("frontMatter").checked, speakerNotes: $("speakerNotes").checked, includeImages: $("includeImages").checked });
+const options = () => ({ frontMatter: $("frontMatter").checked, speakerNotes: $("speakerNotes").checked, includeImages: $("includeImages").checked, ocrLang: $("ocrLang").value });
 // En las páginas por formato (/pdf-to-markdown/…) ese formato llega preseleccionado, pero «blando»:
 // si se suelta otro documento reconocible, se usa el detectado. Elegirlo a mano lo vuelve firme.
 const PAGE_FORMAT = document.documentElement.dataset.format || "";
@@ -146,6 +149,7 @@ function refreshButtons() {
   $("convert").disabled = !running && !pending;
   $("clear").disabled = !!running || !items.length;
   $("sourceFormat").disabled = !!running;
+  $("ocrLang").disabled = !!running;
   $("drop").classList.toggle("busy", !!running);
 }
 
@@ -304,6 +308,15 @@ async function convertAll() {
 
 /* ---------- Eventos ---------- */
 
+function fillOcrSelect() {
+  for (const [code, { label }] of Object.entries(OCR_LANGS)) {
+    const o = document.createElement("option");
+    o.value = code;
+    o.textContent = label;
+    $("ocrLang").append(o);
+  }
+}
+
 function fillFormatSelect() {
   const select = $("sourceFormat");
   for (const f of FORCEABLE) {
@@ -336,6 +349,10 @@ $("speakerNotes").addEventListener("change", () => {
 $("includeImages").addEventListener("change", () => {
   savePrefs();
   invalidate((item) => IMAGE_FORMATS.includes(effectiveFormat(item)) && !!item.result);
+});
+$("ocrLang").addEventListener("change", () => {
+  savePrefs();
+  invalidate((item) => effectiveFormat(item) === "pdf" && !!item.result);
 });
 $("frontMatter").addEventListener("change", () => {
   savePrefs();
@@ -374,6 +391,7 @@ drop.addEventListener("drop", (e) => {
 });
 
 fillFormatSelect();
+fillOcrSelect();
 if (FORCEABLE.includes(PAGE_FORMAT)) {
   $("sourceFormat").value = PAGE_FORMAT;
   softFormat = PAGE_FORMAT;

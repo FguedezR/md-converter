@@ -19,6 +19,7 @@ convert.js          # registro de conversores, loadScript y convertDocument (sin
 reader.js           # renderizado del lector (marked + DOMPurify), índice, vistas
 converters/         # un archivo por familia; cada uno llama a registerConverter({...})
   html.js  txt.js  docx.js  pdf.js  pptx.js  odf.js  abw.js  pandoc.js  ole.js
+  ocr.js            # OCR con tesseract.js; lo carga pdf.js solo si el usuario acepta
   zipxml.js         # utilidades compartidas de PPTX y ODF (JSZip + XML); va aparte para no duplicar nombres globales
 workers/
   pandoc-worker.js  # ejecuta pandoc.wasm fuera del hilo principal
@@ -74,6 +75,7 @@ recurso externo permitido; la URL vive en una constante `PANDOC_BASE` en `conver
 | DOC/PPT/PPS/WPS/DPS (OLE) | cfb (SheetJS) + extractor propio | bajo demanda |
 | RTF/RST/TEX | pandoc.wasm + su puente JS oficial | worker, bajo demanda |
 | Resaltado de código en el lector | highlight.js (subconjunto de lenguajes) | bajo demanda |
+| OCR de PDF escaneados (fase 5) | tesseract.js + núcleo wasm + modelos de idioma | worker, bajo demanda |
 
 ## Decisiones de la fase 0 (2026-11-17)
 
@@ -94,6 +96,9 @@ rutas que se ejecuten) y cambiar el nombre del archivo.
 | highlight.js | 11.12.0 | `highlight-11.12.0.min.js` (`@highlightjs/cdn-assets`, ~35 lenguajes comunes) | IIFE | BSD-3 |
 | browser_wasi_shim | 0.3.0 (la que fija el puente de pandoc) | `browser_wasi_shim-0.3.0/` | **solo ESM** | MIT o Apache-2.0 |
 | cfb | 1.2.2 | `cfb-1.2.2.min.js` | UMD, global `CFB` | Apache-2.0 |
+| tesseract.js | 7.0.0 | `tesseract-7.0.0/` (`tesseract.min.js`, `worker.min.js`) | UMD, global `Tesseract` | Apache-2.0 |
+| tesseract.js-core | **7.0.0** (no la 6.1.2 que npm marca `latest`: tesseract.js 7 pide las variantes relaxed-SIMD) | `tesseract-core-7.0.0/` (solo las tres `*-lstm.wasm.js`) | wasm | Apache-2.0 |
+| modelos de idioma | `@tesseract.js-data/<idioma>` 1.0.0, variante `4.0.0_best_int` | `tessdata-4.0.0_best_int/` (eng, spa, fra, deu, ita, por) | `.traineddata.gz` | MIT (paquete) / Apache-2.0 (modelos) |
 
 - Solo ESM: pdf.js (se carga con `import()`) y browser_wasi_shim (lo importa el worker de pandoc,
   que por eso es un worker de módulo).
@@ -239,6 +244,27 @@ siempre permite forzarlo.
 - **No soportados**: WPD, LWP, WPS de Microsoft Works. Mensaje claro: «This format can't be
   converted in the browser. Save it as DOCX in your word processor and convert that file.» No
   se intenta ninguna conversión parcial.
+
+## OCR (fase 5)
+
+- Solo para PDF. Una página cuenta como escaneada si no tiene texto, o si tiene alguna imagen y
+  su único texto está en la franja de cabecera o pie (fechas o números de página que estampan
+  los escáneres). Si hay alguna, `ctx.confirm` muestra el aviso con el idioma y el tamaño de la
+  primera descarga (núcleo ~3,7 MB + modelo); Skip deja el comportamiento anterior.
+- Todo se sirve desde `vendor/` (ningún archivo pasa de 25 MiB): no hace falta R2. tesseract
+  guarda el modelo en IndexedDB; el núcleo, la caché HTTP.
+- Worker clásico desde nuestro dominio (`workerBlobURL: false`); con la CSP actual no da avisos.
+- Las páginas se renderizan con pdf.js a ~2400 px en el lado largo (OffscreenCanvas) y solo se
+  pasan por OCR las escaneadas; la imagen de esas páginas no deja marcador.
+- Párrafos y títulos se rehacen en `ocrBlocks()` (pdf.js) con las cajas de las líneas: nuevo
+  párrafo si la distancia entre los bordes superiores de dos líneas supera en un 30 % el
+  interlineado típico (cuartil inferior); título si la línea es un 30 % más alta que el cuerpo. Las
+  líneas sin letras ni números o con confianza < 30 se descartan.
+- Cancelar: `worker.terminate()` no rechaza el trabajo en curso, así que cada espera compite con
+  la señal de cancelación (`orCancel` en `ocr.js`).
+- Idioma: selector «OCR language» (preferencia guardada; si no hay, el del navegador). Cambiarlo
+  invalida los PDF ya convertidos. En `test.html` el OCR está desactivado salvo que el caso ponga
+  `"options": { "ocr": true, "ocrLang": "…" }`.
 
 ## Reglas de dominio (no cambiar sin consultar)
 

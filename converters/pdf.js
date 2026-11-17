@@ -4,7 +4,7 @@ const PDFJS_DIR = "/vendor/pdfjs-6.5.438/";
 const pdfAsset = (file) => new URL(PDFJS_DIR + file, location.href).href;
 let pdfjsLib = null;
 
-const SCANNED_WARNING = "This PDF looks scanned: it has no text layer to extract. Run it through an OCR tool first.";
+const SCANNED_WARNING = "This PDF looks scanned: it has no text layer to extract. Convert it again and choose Download to recognise the text with OCR.";
 const MIN_PAGE_CHARS = 5;
 const MIN_IMAGE_PT = 24; // por debajo son iconos o adornos, no imágenes de contenido
 const BULLET = /^([•●○◦▪■□‣⁃∙·\-–—*])\s+(.*)$/;
@@ -174,6 +174,10 @@ function buildBlocks(pages, levels) {
   const leading = gaps[Math.floor(gaps.length / 2)] || levels.body * 1.2;
 
   for (const p of pages) {
+    if (p.ocr) {
+      blocks.push(...p.ocr);
+      continue;
+    }
     const right = p.lines.filter((l) => l.size === levels.body).map((l) => l.xEnd).sort((a, b) => a - b);
     const rightEdge = right[Math.floor(right.length * 0.9)] || 0;
     let prevLine = null;
@@ -230,6 +234,88 @@ function renderBlocks(blocks, sink) {
   return out.join("");
 }
 
+/* ---------- OCR ---------- */
+
+const quantile = (values, q) => {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length * q)] || 0;
+};
+
+// Rehace párrafos y títulos a partir de las líneas del OCR. Se mide la distancia entre los
+// bordes superiores de líneas seguidas (las cajas se solapan por ascendentes y descendentes, así
+// que el «hueco» no sirve): si supera claramente el interlineado típico, empieza otro párrafo.
+// Una línea al menos un 30 % más alta que el cuerpo es un título.
+function ocrBlocks(lines) {
+  // Fuera la basura: líneas sin letras ni números o con muy poca confianza.
+  const good = lines.filter((l) => /[\p{L}\p{N}]/u.test(l.text) && l.conf >= 30);
+  if (!good.length) return [];
+  const h = (l) => l.y1 - l.y0;
+  const body = quantile(good.map(h), 0.5);
+  const pitches = good.slice(1).map((l, i) => l.y0 - good[i].y0).filter((d) => d > 0 && d < body * 4);
+  // Cuartil inferior: en un texto con muchos párrafos cortos, la mediana ya sería un salto de párrafo.
+  const pitch = quantile(pitches, 0.25) || body * 1.4;
+  const big = (l) => h(l) >= body * 1.3 && l.text.length <= 120;
+  const sizeKey = (l) => Math.round((h(l) / body) * 4);
+  const headingSizes = [...new Set(good.filter(big).map(sizeKey))].sort((a, b) => b - a);
+  const level = (l) => (big(l) ? Math.min(3, headingSizes.indexOf(sizeKey(l)) + 1) : 0);
+
+  const blocks = [];
+  good.forEach((l, i) => {
+    const prev = good[i - 1];
+    const last = blocks[blocks.length - 1];
+    const lv = level(l);
+    const step = prev ? l.y0 - prev.y0 : Infinity;
+    const joined = last && (last.level || 0) === lv && step > 0 && step <= Math.max(pitch, h(prev)) * 1.3;
+    if (joined) last.text = joinText(last.text, l.text);
+    else blocks.push(lv ? { type: "heading", level: lv, text: l.text } : { type: "para", text: l.text });
+  });
+  return blocks;
+}
+
+async function renderForOcr(page) {
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: Math.min(4, 2400 / Math.max(base.width, base.height)) });
+  const canvas = new OffscreenCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+  await page.render({ canvas, viewport, background: "#ffffff" }).promise;
+  const blob = await canvas.convertToBlob({ type: "image/png" });
+  page.cleanup();
+  return blob;
+}
+
+// Si hay páginas sin capa de texto, ofrece OCR (con aviso del tamaño de la descarga). Las páginas
+// reconocidas quedan con p.ocr = [párrafos] y dejan de contar como vacías.
+async function ocrScannedPages(doc, pages, opts, ctx) {
+  const scanned = pages.filter((p) => p.empty);
+  if (!scanned.length || opts.ocr === false) return { used: false, warnings: [] };
+  const lang = OCR_LANGS[opts.ocrLang] ? opts.ocrLang : "eng";
+  await loadScript("/converters/ocr.js");
+  const what = scanned.length === pages.length ? "This PDF looks scanned" : `${scanned.length} of ${pages.length} pages look scanned`;
+  ctx.status("Waiting for you to allow OCR…");
+  const ok = await ctx.confirm(`${what}: there’s no text layer to extract. Recognise the text with OCR in ${OCR_LANGS[lang].label}? The first time it downloads about ${ocrDownloadMB(lang)} MB, and each page takes a few seconds. The OCR language can be changed in the options.`);
+  if (!ok) return { used: false, warnings: [] };
+  try {
+    const images = [];
+    for (const p of scanned) {
+      ctx.signal?.throwIfAborted();
+      ctx.status(`Preparing page ${p.n} for OCR…`);
+      images.push(await renderForOcr(await doc.getPage(p.n)));
+    }
+    const texts = await recognizePages(images, lang, {
+      signal: ctx.signal,
+      status: ctx.status,
+      onPage: (i, fraction) => ctx.progress((i + fraction) / images.length),
+    });
+    scanned.forEach((p, i) => {
+      p.ocr = ocrBlocks(texts[i]);
+      if (p.ocr.length) p.empty = false;
+    });
+    return { used: true, warnings: [`Text recognised with OCR (${OCR_LANGS[lang].label}): check it for mistakes`] };
+  } catch (e) {
+    ctx.signal?.throwIfAborted();
+    return { used: false, warnings: [e.message] };
+  }
+}
+
 /* ---------- Conversor ---------- */
 
 registerConverter({
@@ -262,7 +348,6 @@ registerConverter({
 
     try {
       const pages = [];
-      let emptyPages = 0;
       let title = "";
       try { title = ((await doc.getMetadata()).info?.Title || "").trim(); } catch (e) {}
       // Muchos generadores dejan como título el nombre del archivo de origen: no sirve.
@@ -287,19 +372,27 @@ registerConverter({
             if (img.id) done.set(img.id, img.blob);
           }
         }
-        if (lines.reduce((s, l) => s + l.text.replace(/\s/g, "").length, 0) < MIN_PAGE_CHARS) emptyPages++;
-        pages.push({ height: y1 - y0, lines, images });
+        // Escaneada = sin texto, o con imagen y texto solo en la franja de cabecera/pie
+        // (muchos escáneres estampan fecha o número de página).
+        const chars = (list) => list.reduce((s, l) => s + l.text.replace(/\s/g, "").length, 0);
+        const height = y1 - y0;
+        const body = lines.filter((l) => l.y < height * 0.88 && l.y > height * 0.12);
+        const empty = chars(lines) < MIN_PAGE_CHARS || (images.length > 0 && chars(body) < MIN_PAGE_CHARS);
+        pages.push({ n, height, lines, images, empty });
         page.cleanup();
         ctx.progress((n / doc.numPages) * 0.9);
       }
 
-      if (emptyPages === doc.numPages) return { markdown: "", warnings: [SCANNED_WARNING], images: [], title };
+      const ocr = await ocrScannedPages(doc, pages, opts, ctx);
+      const emptyPages = pages.filter((p) => p.empty).length;
+      if (emptyPages === doc.numPages) return { markdown: "", warnings: [ocr.used ? "OCR found no text in this PDF" : SCANNED_WARNING, ...ocr.warnings], images: [], title };
 
       removeRunningLines(pages);
       const levels = headingLevels(pages);
       // Las imágenes se colocan entre las líneas según su altura en la página.
       for (const p of pages) {
-        p.items = [...p.lines];
+        // En las páginas pasadas por OCR la imagen escaneada ES el texto: no se deja marcador.
+        p.items = p.ocr ? [] : [...p.lines];
         for (const img of p.images) {
           const at = p.items.findIndex((it) => !it.image && it.y < img.y);
           p.items.splice(at < 0 ? p.items.length : at, 0, img);
@@ -307,7 +400,7 @@ registerConverter({
       }
       const sink = createImageSink(opts.includeImages);
       const markdown = renderBlocks(buildBlocks(pages, levels), sink);
-      const warnings = [];
+      const warnings = [...ocr.warnings];
       if (emptyPages) warnings.push(`${emptyPages} ${emptyPages === 1 ? "page has" : "pages have"} no text layer (scanned?)`);
       warnings.push(...sink.warnings());
       ctx.progress(1);

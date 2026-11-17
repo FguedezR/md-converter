@@ -17,8 +17,8 @@ const PAGES = [
   {
     slug: "pdf-to-markdown", format: "pdf", name: "PDF", drop: "Drop PDF files",
     title: "PDF to Markdown converter · free, in your browser",
-    description: "Convert PDF to Markdown with headings, paragraphs and lists rebuilt from the layout. Repeated headers and footers are removed. Free, nothing is uploaded.",
-    intro: "Convert PDF files to clean Markdown. Headings are detected from font sizes, broken lines and hyphenated words are joined, and headers and footers repeated on every page are removed. Scanned PDFs without a text layer are flagged instead of returning an empty file.",
+    description: "Convert PDF to Markdown with headings, paragraphs and lists rebuilt from the layout, and OCR for scanned pages. Free, and nothing is uploaded.",
+    intro: "Convert PDF files to clean Markdown. Headings are detected from font sizes, broken lines and hyphenated words are joined, and headers and footers repeated on every page are removed. Scanned pages can be recognised with OCR in English, Spanish, French, German, Italian or Portuguese, right in your browser.",
   },
   {
     slug: "docx-to-markdown", format: "docx", name: "Word", drop: "Drop Word files",

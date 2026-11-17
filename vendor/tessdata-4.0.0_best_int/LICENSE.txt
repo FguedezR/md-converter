@@ -1,0 +1,4 @@
+Modelos de idioma de Tesseract (tessdata_best, variante entera «best_int»), distribuidos en npm
+por el proyecto tesseract.js como @tesseract.js-data/<idioma>@1.0.0 (licencia MIT del paquete).
+Los modelos originales proceden de https://github.com/tesseract-ocr/tessdata_best y se
+publican bajo la licencia Apache 2.0: https://www.apache.org/licenses/LICENSE-2.0
