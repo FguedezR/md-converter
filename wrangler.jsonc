@@ -1,0 +1,12 @@
+// Worker de assets estáticos de md.ferguedez.dev (Workers Builds despliega main).
+// Sin código de servidor: solo sirve los archivos del repo.
+{
+  "name": "md-converter",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./",
+    // Las URL inexistentes devuelven 404.html con estado 404 (sin esto, un 404 vacío).
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

@@ -1,0 +1,8 @@
+# Archivos del repo que no se publican en md.ferguedez.dev.
+.claude/
+.git/
+.gitignore
+.wrangler/
+_test/
+tools/
+wrangler.jsonc

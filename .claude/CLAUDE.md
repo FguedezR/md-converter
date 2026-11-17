@@ -35,7 +35,9 @@ test.js             # lógica del banco (archivo aparte: la CSP no permite scrip
 favicon.svg / favicon.ico
 _headers            # cabeceras de Cloudflare Pages (CSP incluida)
 .gitignore          # .DS_Store, _test/ y .wrangler/ (estado local de wrangler)
-.claude/CLAUDE.md   # este archivo: en .claude/ para que Cloudflare Pages no lo publique en la raíz
+.claude/CLAUDE.md   # este archivo (fuera de la publicación por .assetsignore)
+wrangler.jsonc      # configuración del Worker de assets estáticos que sirve el sitio
+.assetsignore       # lo que no se publica
 ```
 
 - **Sin build step**: nada de package.json, npm, bundler, TypeScript ni frameworks. Lo que
@@ -360,5 +362,8 @@ siempre permite forzarlo.
 ## Git y despliegue
 
 - Mensajes de commit en español, breves y descriptivos.
-- Cloudflare Pages directamente desde la raíz del repo (sin comando de build, salida `/`).
-  Dominio: `md.ferguedez.dev`.
+- Despliegue: **Worker de assets estáticos** (no Pages) conectado a GitHub con Workers Builds,
+  rama `main`. `wrangler.jsonc` sirve la raíz del repo y usa `404.html` para las URL
+  inexistentes; `.assetsignore` excluye lo interno (`.claude/`, `tools/`, `_test/`,
+  `.gitignore`, `wrangler.jsonc`). Sin comando de build. Dominio: `md.ferguedez.dev`.
+- Un push a `main` publica en producción: confirmar siempre antes de hacerlo.
