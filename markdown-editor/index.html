@@ -1,0 +1,106 @@
+<!doctype html>
+<!-- Escrita a mano: tools/pages.mjs no la genera (solo la añade al sitemap). -->
+<html lang="en" data-accent="amber">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#07090d">
+  <title>Markdown editor · write .md with live preview, in your browser</title>
+  <meta name="description" content="Write and edit Markdown with a live GitHub-flavoured preview, toolbar and keyboard shortcuts. Open and download .md files. Free, and nothing is uploaded.">
+  <link rel="canonical" href="https://md.ferguedez.dev/markdown-editor/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MD Converter">
+  <meta property="og:title" content="Markdown editor · write .md with live preview, in your browser">
+  <meta property="og:description" content="Write and edit Markdown with a live preview, toolbar and shortcuts. Free, and nothing is uploaded.">
+  <meta property="og:url" content="https://md.ferguedez.dev/markdown-editor/">
+  <meta property="og:image" content="https://md.ferguedez.dev/og/markdown-editor.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Markdown Editor · MD Converter">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="preload" href="/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/GeistPixel-Square.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="editor-page">
+  <div id="editor" class="editor" data-view="split">
+    <header class="editor-top">
+      <a class="editor-brand" href="/" title="Back to MD Converter">MD<span aria-hidden="true">·</span>Editor</a>
+      <h1 class="sr-only">Markdown editor</h1>
+      <label class="editor-file">
+        <span class="sr-only">File name</span>
+        <input id="docName" type="text" value="untitled.md" spellcheck="false" autocomplete="off">
+      </label>
+      <span id="dirty" class="editor-dirty" title="Unsaved changes" hidden>● <span class="sr-only">Unsaved changes</span></span>
+      <nav class="editor-actions" aria-label="File">
+        <button id="newDoc" class="link" type="button">New</button>
+        <button id="openDoc" class="link" type="button">Open…</button>
+        <button id="copyDoc" class="link" type="button">Copy</button>
+        <button id="downloadDoc" class="link" type="button">Download .md <span aria-hidden="true">↓</span></button>
+        <a class="link" href="/">Converter <span aria-hidden="true">→</span></a>
+      </nav>
+    </header>
+
+    <div id="confirmNew" class="editor-confirm" role="alertdialog" aria-labelledby="confirmNewText" hidden>
+      <p id="confirmNewText">Discard your unsaved changes and start a new document?</p>
+      <div class="actions">
+        <button id="confirmNewNo" type="button">Keep editing</button>
+        <button id="confirmNewYes" class="primary" type="button">Discard</button>
+      </div>
+    </div>
+
+    <div class="editor-toolbar" role="toolbar" aria-label="Formatting" aria-controls="mdInput">
+      <div class="editor-tools">
+        <button type="button" data-cmd="heading" title="Heading (cycles # to ###)">H</button>
+        <button type="button" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button type="button" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button type="button" data-cmd="strike" title="Strikethrough"><s>S</s></button>
+        <span class="editor-sep" aria-hidden="true"></span>
+        <button type="button" data-cmd="code" title="Inline code (Ctrl+Shift+K)">`</button>
+        <button type="button" data-cmd="codeblock" title="Code block">```</button>
+        <button type="button" data-cmd="link" title="Link (Ctrl+K)">link</button>
+        <button type="button" data-cmd="image" title="Image">img</button>
+        <span class="editor-sep" aria-hidden="true"></span>
+        <button type="button" data-cmd="ul" title="Bulleted list">•</button>
+        <button type="button" data-cmd="ol" title="Numbered list">1.</button>
+        <button type="button" data-cmd="task" title="Task list">[ ]</button>
+        <button type="button" data-cmd="quote" title="Quote">&gt;</button>
+        <button type="button" data-cmd="table" title="Table">table</button>
+        <button type="button" data-cmd="hr" title="Horizontal rule">—</button>
+      </div>
+      <div class="tabs" role="group" aria-label="View">
+        <button type="button" data-editor-view="edit" aria-pressed="false">Edit</button>
+        <button type="button" data-editor-view="split" aria-pressed="true">Split</button>
+        <button type="button" data-editor-view="preview" aria-pressed="false">Preview</button>
+      </div>
+    </div>
+
+    <div id="editorBody" class="editor-body">
+      <div class="editor-pane editor-pane-input">
+        <textarea id="mdInput" class="editor-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Markdown source" placeholder="# Start writing&#10;&#10;Type Markdown here, or drop a .md file. Ctrl+S downloads it."></textarea>
+        <div id="mdMirror" class="editor-input editor-mirror" aria-hidden="true"></div>
+      </div>
+      <article id="mdPreview" class="md-preview editor-preview" aria-label="Preview"></article>
+    </div>
+
+    <footer class="editor-status">
+      <span id="statusPos">Ln 1, Col 1</span>
+      <span id="statusCounts">0 words · 0 chars</span>
+      <span id="statusMsg" role="status" aria-live="polite"></span>
+      <span class="editor-status-right">Markdown (GFM) · UTF-8 · nothing is uploaded</span>
+    </footer>
+  </div>
+  <input id="mdFile" type="file" accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain" hidden>
+
+  <script src="/vendor/marked-18.1.3.umd.js"></script>
+  <script src="/vendor/purify-3.4.17.min.js"></script>
+  <script src="/detect.js"></script>
+  <script src="/postprocess.js"></script>
+  <script src="/convert.js"></script>
+  <script src="/reader.js"></script>
+  <script src="/editor.js"></script>
+</body>
+</html>

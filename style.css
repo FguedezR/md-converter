@@ -252,3 +252,72 @@ tr.active td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 .consent[hidden] { display: none; }
 .consent p { flex: 1 1 320px; }
 .consent .actions { margin-left: auto; }
+
+/* ---------- Editor (/markdown-editor/) ---------- */
+
+a.link { display: inline-block; text-decoration: none; }
+.hero-links { display: flex; flex-wrap: wrap; gap: 0 28px; }
+.hero-links .link-accent { color: var(--accent); }
+.hero-links .link-accent:hover, .hero-links .link-accent:focus-visible { color: var(--fg); }
+
+/* Pantalla completa: cabecera, barra de formato, paneles y barra de estado. */
+.editor-page { overflow: hidden; }
+.editor { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.editor > * { flex: none; }
+.editor > .editor-body { flex: 1 1 0; }
+.editor-top { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.editor-brand { color: var(--fg); font: 400 20px/1 var(--pixel); text-decoration: none; letter-spacing: .02em; }
+.editor-brand span { color: var(--accent); padding: 0 2px; }
+.editor-brand:hover, .editor-brand:focus-visible { color: var(--accent); outline: none; }
+.editor-file { flex: 1 1 160px; min-width: 0; display: flex; }
+.editor-file input { width: 100%; max-width: 360px; padding: 4px 0; background: transparent; color: var(--fg); border: 0; border-bottom: 1px solid transparent; border-radius: 0; font: inherit; }
+.editor-file input:hover { border-bottom-color: var(--line-strong); }
+.editor-file input:focus-visible { border-bottom-color: var(--accent); outline: none; }
+.editor-dirty { color: var(--accent); font-size: 11px; }
+.editor-dirty[hidden] { display: none; }
+.editor-actions { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.editor-actions .link { padding: 4px 0; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+
+.editor-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 10px 16px; border-bottom: 1px solid var(--line-strong); border-left: 3px solid var(--accent); background: var(--surface); }
+.editor-confirm[hidden] { display: none; }
+.editor-confirm p { flex: 1 1 280px; margin: 0; }
+
+.editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 6px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.editor-tools { display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.editor-tools button { min-width: 32px; height: 30px; padding: 0 8px; background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 0; cursor: pointer; font-size: 12px; white-space: nowrap; }
+.editor-tools button:hover, .editor-tools button:focus-visible { color: var(--fg); border-color: var(--line-strong); outline: none; }
+.editor-tools button:focus-visible { border-color: var(--accent); }
+.editor-tools button:active { color: var(--accent); }
+.editor-tools b, .editor-tools i, .editor-tools s { font-weight: 700; }
+.editor-sep { flex: none; width: 1px; height: 16px; margin: 0 6px; background: var(--line-strong); }
+
+.editor-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
+.editor[data-view="edit"] .editor-body, .editor[data-view="preview"] .editor-body { grid-template-columns: minmax(0, 1fr); }
+.editor[data-view="edit"] .editor-preview, .editor[data-view="preview"] .editor-pane-input { display: none; }
+.editor-pane-input { position: relative; min-height: 0; overflow: hidden; border-right: 1px solid var(--line); }
+.editor[data-view="edit"] .editor-pane-input { border-right: 0; }
+
+/* El espejo comparte la clase del textarea para medir exactamente lo mismo (sync scroll). */
+.editor-input { margin: 0; padding: 20px 16px 40vh; font: 400 13px/1.65 var(--mono); letter-spacing: 0; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+textarea.editor-input { display: block; width: 100%; height: 100%; resize: none; overflow: auto; background: var(--bg); color: var(--fg); border: 0; border-radius: 0; caret-color: var(--accent); }
+textarea.editor-input::placeholder { color: var(--muted); }
+textarea.editor-input:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+textarea.editor-input::selection { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+.editor-mirror { position: absolute; top: 0; left: 0; visibility: hidden; pointer-events: none; }
+.editor-preview { min-height: 0; overflow: auto; padding-bottom: 40vh; }
+.editor[data-view="preview"] .editor-preview > * { margin-left: auto; margin-right: auto; }
+
+.editor-status { display: flex; flex-wrap: wrap; gap: 4px 20px; padding: 6px 16px; border-top: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 11px; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.editor-status [role="status"] { color: var(--accent); }
+.editor-status-right { margin-left: auto; }
+
+@media (max-width: 760px) {
+  .editor-status-right { display: none; }
+}
+@media (max-width: 560px) {
+  .editor-toolbar [data-editor-view="split"] { display: none; }
+  .editor-toolbar { flex-wrap: wrap; }
+  .editor-tools { flex: 1 1 100%; }
+  .editor-actions { width: 100%; justify-content: space-between; gap: 8px 12px; }
+  .editor-pane-input { border-right: 0; }
+}

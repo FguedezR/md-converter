@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://md.ferguedez.dev";
-const LASTMOD = "2026-11-17"; // cambiarla cuando cambie el contenido de las páginas
+const LASTMOD = "2026-11-19"; // cambiarla cuando cambie el contenido de las páginas
 const UNSUPPORTED = "This format can’t be converted in the browser: no open-source library reads it reliably. ";
 
 // format: valor del selector «Source format» (vacío = Auto). Los textos son únicos por página.
@@ -130,6 +130,9 @@ const PAGES = [
   },
 ];
 
+// Páginas escritas a mano (no salen de la plantilla) que también van al sitemap.
+const EXTRA_PAGES = ["markdown-editor/"];
+
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
 function seoBlock(page, url, image, { index = true } = {}) {
@@ -191,7 +194,7 @@ outputs.set("404.html", render(template, {
 outputs.set("sitemap.xml", [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-  ...["", ...PAGES.map((p) => `${p.slug}/`)].map((path) => `  <url><loc>${SITE}/${path}</loc><lastmod>${LASTMOD}</lastmod></url>`),
+  ...["", ...PAGES.map((p) => `${p.slug}/`), ...EXTRA_PAGES].map((path) => `  <url><loc>${SITE}/${path}</loc><lastmod>${LASTMOD}</lastmod></url>`),
   "</urlset>",
   "",
 ].join("\n"));
