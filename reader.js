@@ -50,11 +50,12 @@ function headingSlug(text, used) {
   return slug;
 }
 
-function renderPreview() {
-  const preview = $("mdPreview");
-  preview.innerHTML = renderMarkdown(readerDoc.markdown); // única excepción: ya pasado por DOMPurify
+// Pinta el Markdown saneado en `el`, cambia las imágenes bloqueadas por un marcador y da a cada
+// título un id estable. Devuelve las entradas h1–h3 para el índice. La comparte el editor.
+function renderMarkdownInto(el, markdown) {
+  el.innerHTML = renderMarkdown(markdown); // única excepción: ya pasado por DOMPurify
 
-  preview.querySelectorAll("img[data-blocked]").forEach((img) => {
+  el.querySelectorAll("img[data-blocked]").forEach((img) => {
     const span = document.createElement("span");
     span.className = "img-blocked";
     span.textContent = `[Image: ${img.getAttribute("alt") || "no description"}]`;
@@ -63,11 +64,16 @@ function renderPreview() {
 
   const used = new Set();
   const toc = [];
-  preview.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((h) => {
+  el.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((h) => {
     h.id = HEADING_PREFIX + headingSlug(h.textContent, used);
     if (/^H[1-3]$/.test(h.nodeName)) toc.push({ level: +h.nodeName[1], text: h.textContent, id: h.id });
   });
-  renderToc(toc);
+  return toc;
+}
+
+function renderPreview() {
+  const preview = $("mdPreview");
+  renderToc(renderMarkdownInto(preview, readerDoc.markdown));
   syncMap = null;
   highlightCode(preview);
 }

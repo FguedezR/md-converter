@@ -17,6 +17,8 @@ detect.js           # detectFormat(bytes, name): funciones puras, sin DOM
 postprocess.js      # normalizeMarkdown(md, opts): funciones puras, sin DOM
 convert.js          # registro de conversores, loadScript y convertDocument (sin UI; lo comparte test.html)
 reader.js           # renderizado del lector (marked + DOMPurify), índice, vistas
+editor.js           # editor de /markdown-editor/ (textarea + vista previa en vivo; reutiliza reader.js)
+markdown-editor/index.html  # escrita a mano, NO generada (pages.mjs solo la mete en el sitemap)
 converters/         # un archivo por familia; cada uno llama a registerConverter({...})
   html.js  txt.js  docx.js  pdf.js  pptx.js  odf.js  abw.js  pandoc.js  ole.js
   ocr.js            # OCR con tesseract.js; lo carga pdf.js solo si el usuario acepta
@@ -306,6 +308,22 @@ siempre permite forzarlo.
   el primer panel que se mueve hasta 150 ms después de su último evento, para que no rebote. En
   Split, el índice desplaza el panel de la vista previa, no la página.
 - Enlaces del documento con `rel="noopener noreferrer"` y `target="_blank"`.
+
+## Editor (`/markdown-editor/`, v1.2, 2026-11-19)
+
+- Página propia a pantalla completa (no sale de la plantilla de `index.html`; `tools/pages.mjs`
+  solo la añade al sitemap con `EXTRA_PAGES`). Se llega desde el hero (nueva pestaña) y el pie.
+- Textarea sin librerías (CodeMirror descartado: el 6 exige build, el 5 es legacy). Carga los
+  mismos scripts que la portada salvo `app.js`, más `editor.js` (globales con prefijo `ed`).
+- Render con `renderMarkdownInto()` de `reader.js` (mismo saneado que el lector), debounce
+  120 ms; highlight.js tras 600 ms sin escribir.
+- Split: mismo sync scroll por títulos que el lector; la Y de los títulos en el textarea se mide
+  con un div espejo (`#mdMirror`, misma clase `.editor-input`): no cambiar la caja de uno sin la del otro.
+- Ediciones con `execCommand("insertText")` para conservar Ctrl+Z (fallback `setRangeText`).
+  Enter continúa listas/citas; en elemento vacío la cierra dejando línea en blanco. Tab indenta;
+  Esc libera Tab para mover el foco.
+- Sin autoguardado: solo aviso `beforeunload` si hay cambios. Vista en `md-prefs.editorView`.
+  En ≤560px Split se comporta como Edit.
 
 ## HTML
 
